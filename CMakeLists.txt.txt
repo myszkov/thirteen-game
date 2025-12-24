@@ -1,0 +1,96 @@
+cmake_minimum_required(VERSION 3.16)
+project(Thirteen VERSION 1.0 LANGUAGES CXX)
+
+# Set C++ standard to C++20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Add compiler warnings
+if(MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# Find SFML 3
+find_package(SFML 3 COMPONENTS graphics window system REQUIRED)
+
+# Include directories
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+# Collect source files
+set(CORE_SOURCES
+    src/Core/Card.cpp
+    # src/Core/Deck.cpp      # Uncomment as we add them
+    # src/Core/Hand.cpp
+)
+
+set(GAME_SOURCES
+    # src/Game/GameState.cpp
+    # src/Game/Player.cpp
+    # src/Game/GameRules.cpp
+    # src/Game/PlayValidator.cpp
+)
+
+set(PLAYS_SOURCES
+    # src/Plays/Play.cpp
+    # src/Plays/PlayComparator.cpp
+)
+
+set(INPUT_SOURCES
+    # src/Input/CommandParser.cpp
+    # src/Input/InputHandler.cpp
+)
+
+set(RENDERING_SOURCES
+    # src/Rendering/Renderer.cpp
+    # src/Rendering/CardSprite.cpp
+    # src/Rendering/UIElements.cpp
+)
+
+# Combine all sources
+set(ALL_SOURCES
+    ${CORE_SOURCES}
+    ${GAME_SOURCES}
+    ${PLAYS_SOURCES}
+    ${INPUT_SOURCES}
+    ${RENDERING_SOURCES}
+    main.cpp
+)
+
+# Create executable
+add_executable(thirteen-game ${ALL_SOURCES})
+
+# Link SFML libraries
+target_link_libraries(thirteen-game PRIVATE 
+    sfml-graphics
+    sfml-window
+    sfml-system
+)
+
+# Copy assets to build directory (optional, for when we add fonts/textures)
+# file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
+
+# Platform-specific settings
+if(WIN32)
+    # Copy SFML DLLs to output directory on Windows
+    add_custom_command(TARGET thirteen-game POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:sfml-graphics>
+            $<TARGET_FILE:sfml-window>
+            $<TARGET_FILE:sfml-system>
+            $<TARGET_FILE_DIR:thirteen-game>
+    )
+endif()
+
+# Installation rules (optional)
+install(TARGETS thirteen-game DESTINATION bin)
+# install(DIRECTORY assets DESTINATION share/thirteen-game)
+
+# Print build configuration
+message(STATUS "=== Thirteen Build Configuration ===")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "SFML Version: ${SFML_VERSION}")
+message(STATUS "====================================")
