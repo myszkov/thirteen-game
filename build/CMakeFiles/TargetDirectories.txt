@@ -1,0 +1,3 @@
+C:/Users/Viktor/source/repos/thirteen-game/build/CMakeFiles/thirteen-game.dir
+C:/Users/Viktor/source/repos/thirteen-game/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Viktor/source/repos/thirteen-game/build/CMakeFiles/ZERO_CHECK.dir

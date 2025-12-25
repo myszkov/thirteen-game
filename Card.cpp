@@ -197,11 +197,13 @@ char Card::suitToChar(Suit suit) {
 }
 
 std::string Card::suitToSymbol(Suit suit) {
+    // Using ASCII letters for better compatibility
+    // These will be colored red/black in the rendering
     switch (suit) {
-    case Suit::Diamonds: return "♦";
-    case Suit::Clubs: return "♣";
-    case Suit::Hearts: return "♥";
-    case Suit::Spades: return "♠";
+    case Suit::Diamonds: return "D";
+    case Suit::Clubs: return "C";
+    case Suit::Hearts: return "H";
+    case Suit::Spades: return "S";
     default:
         throw std::invalid_argument("Invalid suit");
     }

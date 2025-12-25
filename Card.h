@@ -1,11 +1,12 @@
 ﻿/**
- * Card.hpp
+ * Card.h
  * Represents a single playing card with rank and suit
  * In Big Two: 2 is the highest rank, Spades is the highest suit
+ * In Thirteen: 2 is the highest rank, Spades is the lowest suit
  */
 
-#ifndef CARD_HPP
-#define CARD_HPP
+#ifndef CARD_H
+#define CARD_H
 
 #include <string>
 #include <ostream>
@@ -23,14 +24,14 @@ enum class Rank {
     Queen = 12,
     King = 13,
     Ace = 14,
-    Two = 15  // Highest rank in Big Two
+    Two = 15  // Highest rank in Thirteen
 };
 
 enum class Suit {
-    Diamonds = 0,  // Lowest suit
+    Diamonds = 0,  // Lowest suit (Big two), Highest suit (Thirteen)
     Clubs = 1,
     Hearts = 2,
-    Spades = 3     // Highest suit
+    Spades = 3     // Highest suit (Big two), Lowest suit (Thirteen)
 };
 
 class Card {
