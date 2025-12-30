@@ -28,10 +28,10 @@ enum class Rank {
 };
 
 enum class Suit {
-    Diamonds = 0,  // Lowest suit (Big two), Highest suit (Thirteen)
+    Spades = 0,  // Lowest suit (Big two), Highest suit (Thirteen)
     Clubs = 1,
-    Hearts = 2,
-    Spades = 3     // Highest suit (Big two), Lowest suit (Thirteen)
+    Diamonds = 2,
+    Hearts = 3     // Highest suit (Big two), Lowest suit (Thirteen)
 };
 
 class Card {

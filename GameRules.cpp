@@ -8,13 +8,13 @@
 #include <set>
 
  /**
-  * Validate if a play is legal
+  * Validate if a play is legal (Thirteen version)
   */
 PlayValidation GameRules::validatePlay(
     const std::vector<Card>& cards,
     const std::vector<Card>& lastPlay,
     bool isFirstPlay,
-    bool mustIncludeThreeOfDiamonds
+    bool mustIncludeThreeOfSpades
 ) {
     PlayValidation result;
 
@@ -24,9 +24,9 @@ PlayValidation GameRules::validatePlay(
         return result;
     }
 
-    // Check if 3 of Diamonds is required and present
-    if (mustIncludeThreeOfDiamonds && !containsThreeOfDiamonds(cards)) {
-        result.errorMessage = "First play must include 3 of Diamonds";
+    // Check if 3 of Spades is required and present (Thirteen rule)
+    if (mustIncludeThreeOfSpades && !containsThreeOfSpades(cards)) {
+        result.errorMessage = "First play must include 3 of Spades";
         return result;
     }
 
@@ -38,23 +38,14 @@ PlayValidation GameRules::validatePlay(
         return result;
     }
 
-    // If it's a five-card play, determine the specific type
-    if (result.playType == PlayType::FiveCard) {
-        result.fiveCardType = determineFiveCardType(cards);
-        if (result.fiveCardType == FiveCardType::None) {
-            result.errorMessage = "Invalid five-card combination";
-            return result;
-        }
-    }
-
     // If this is the first play or last play was cleared, any valid play is allowed
     if (isFirstPlay || lastPlay.empty()) {
         result.isValid = true;
         return result;
     }
 
-    // Must match the number of cards in last play
-    if (cards.size() != lastPlay.size()) {
+    // Must match the number of cards in last play (unless playing four of a kind)
+    if (result.playType != PlayType::FourOfAKind && cards.size() != lastPlay.size()) {
         result.errorMessage = "Must play same number of cards as last play";
         return result;
     }
@@ -70,7 +61,7 @@ PlayValidation GameRules::validatePlay(
 }
 
 /**
- * Check if a play beats the previous play
+ * Check if a play beats the previous play (Thirteen version)
  */
 bool GameRules::doesPlayBeat(
     const std::vector<Card>& newPlay,
@@ -80,13 +71,29 @@ bool GameRules::doesPlayBeat(
         return true;  // Any play beats an empty play
     }
 
-    if (newPlay.size() != lastPlay.size()) {
-        return false;  // Must be same size
+    PlayType newType = determinePlayType(newPlay);
+    PlayType lastType = determinePlayType(lastPlay);
+
+    // Four of a Kind is special in Thirteen - it can beat anything!
+    if (newType == PlayType::FourOfAKind) {
+        if (lastType == PlayType::FourOfAKind) {
+            // Four of a kind vs four of a kind - compare ranks
+            return getHighestCard(newPlay) > getHighestCard(lastPlay);
+        }
+        return true;  // Four of a kind beats everything else
     }
 
-    PlayType playType = determinePlayType(newPlay);
+    // Can't beat four of a kind with anything else
+    if (lastType == PlayType::FourOfAKind && newType != PlayType::FourOfAKind) {
+        return false;
+    }
 
-    switch (playType) {
+    // Must match play type and number of cards
+    if (newType != lastType || newPlay.size() != lastPlay.size()) {
+        return false;
+    }
+
+    switch (newType) {
     case PlayType::Single:
         return singleBeats(newPlay[0], lastPlay[0]);
 
@@ -95,9 +102,15 @@ bool GameRules::doesPlayBeat(
 
     case PlayType::Triple:
         return tripleBeats(newPlay, lastPlay);
+    
+    case PlayType::FourOfAKind:
+        return fourOfAKindBeats(newPlay, lastPlay);
 
-    case PlayType::FiveCard:
-        return fiveCardBeats(newPlay, lastPlay);
+    case PlayType::Sequence:
+    case PlayType::DoubleSequence:
+    case PlayType::TripleSequence:
+        // Sequences: compare highest card
+        return getHighestCard(newPlay) > getHighestCard(lastPlay);
 
     default:
         return false;
@@ -105,46 +118,48 @@ bool GameRules::doesPlayBeat(
 }
 
 /**
- * Determine play type
+ * Determine play type (Thirteen version)
  */
 PlayType GameRules::determinePlayType(const std::vector<Card>& cards) {
     size_t size = cards.size();
 
+    if (size == 0) {
+        return PlayType::Invalid;
+    }
+
     if (size == 1) {
         return PlayType::Single;
     }
-    else if (size == 2 && isPair(cards)) {
+
+    if (size == 2 && isPair(cards)) {
         return PlayType::Pair;
     }
-    else if (size == 3 && isTriple(cards)) {
+
+    if (size == 3 && isTriple(cards)) {
         return PlayType::Triple;
     }
-    else if (size == 5) {
-        FiveCardType fiveType = determineFiveCardType(cards);
-        if (fiveType != FiveCardType::None) {
-            return PlayType::FiveCard;
-        }
+
+    if (size == 4 && isFourOfAKind(cards)) {
+        return PlayType::FourOfAKind;  // Standalone in Thirteen!
     }
+
+    // Check for sequences (3+ cards)
+    if (size >= 3 && isSequence(cards)) {
+        return PlayType::Sequence;
+    }
+
+    // Check for double sequence (3+ pairs)
+    if (size >= 6 && size % 2 == 0 && isDoubleSequence(cards)) {
+        return PlayType::DoubleSequence;
+    }
+
+    // Check for triple sequence (3+ triples)
+    if (size >= 9 && size % 3 == 0 && isTripleSequence(cards)) {
+        return PlayType::TripleSequence;
+    }
+
 
     return PlayType::Invalid;
-}
-
-/**
- * Determine five-card combination type
- */
-FiveCardType GameRules::determineFiveCardType(const std::vector<Card>& cards) {
-    if (cards.size() != 5) {
-        return FiveCardType::None;
-    }
-
-    // Check in order of strength (highest first)
-    if (isStraightFlush(cards)) return FiveCardType::StraightFlush;
-    if (isFourOfAKind(cards)) return FiveCardType::FourOfAKind;
-    if (isFullHouse(cards)) return FiveCardType::FullHouse;
-    if (isFlush(cards)) return FiveCardType::Flush;
-    if (isStraight(cards)) return FiveCardType::Straight;
-
-    return FiveCardType::None;
 }
 
 /**
@@ -152,6 +167,21 @@ FiveCardType GameRules::determineFiveCardType(const std::vector<Card>& cards) {
  */
 bool GameRules::isSingle(const std::vector<Card>& cards) {
     return cards.size() == 1;
+}
+
+/**
+ * Check if cards form a valid straight
+ */
+bool GameRules::isStraight(const std::vector<Card>& cards) {
+    if (cards.size() < 3) return false;
+    // ... checks for 3+ consecutive cards
+}
+
+/**
+ * Check if cards form a valid sequence
+ */
+bool GameRules::isSequence(const std::vector<Card>& cards) {
+    return isStraight(cards);
 }
 
 /**
@@ -171,87 +201,20 @@ bool GameRules::isTriple(const std::vector<Card>& cards) {
 }
 
 /**
- * Check if cards form a valid straight
- */
-bool GameRules::isStraight(const std::vector<Card>& cards) {
-    if (cards.size() != 5) return false;
-
-    auto sorted = sortByRank(cards);
-
-    // Check consecutive ranks
-    for (size_t i = 1; i < sorted.size(); ++i) {
-        int prevRank = static_cast<int>(sorted[i - 1].getRank());
-        int currRank = static_cast<int>(sorted[i].getRank());
-
-        if (currRank != prevRank + 1) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * Check if cards form a valid flush
- */
-bool GameRules::isFlush(const std::vector<Card>& cards) {
-    if (cards.size() != 5) return false;
-
-    Suit suit = cards[0].getSuit();
-    for (size_t i = 1; i < cards.size(); ++i) {
-        if (cards[i].getSuit() != suit) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * Check if cards form a valid full house
- */
-bool GameRules::isFullHouse(const std::vector<Card>& cards) {
-    if (cards.size() != 5) return false;
-
-    auto sorted = sortByRank(cards);
-
-    // Pattern: AAA BB or AA BBB
-    bool pattern1 = (sorted[0].getRank() == sorted[1].getRank() &&
-        sorted[1].getRank() == sorted[2].getRank() &&
-        sorted[3].getRank() == sorted[4].getRank());
-
-    bool pattern2 = (sorted[0].getRank() == sorted[1].getRank() &&
-        sorted[2].getRank() == sorted[3].getRank() &&
-        sorted[3].getRank() == sorted[4].getRank());
-
-    return pattern1 || pattern2;
-}
-
-/**
- * Check if cards form four of a kind
+ * Check if cards form four of a kind (Thirteen: exactly 4 cards of same rank)
  */
 bool GameRules::isFourOfAKind(const std::vector<Card>& cards) {
-    if (cards.size() != 5) return false;
+    if (cards.size() != 4) return false;  // Thirteen: exactly 4 cards
 
-    auto sorted = sortByRank(cards);
+    // All 4 cards must have the same rank
+    Rank rank = cards[0].getRank();
+    for (size_t i = 1; i < cards.size(); ++i) {
+        if (cards[i].getRank() != rank) {
+            return false;
+        }
+    }
 
-    // Pattern: AAAA B or A BBBB
-    bool pattern1 = (sorted[0].getRank() == sorted[1].getRank() &&
-        sorted[1].getRank() == sorted[2].getRank() &&
-        sorted[2].getRank() == sorted[3].getRank());
-
-    bool pattern2 = (sorted[1].getRank() == sorted[2].getRank() &&
-        sorted[2].getRank() == sorted[3].getRank() &&
-        sorted[3].getRank() == sorted[4].getRank());
-
-    return pattern1 || pattern2;
-}
-
-/**
- * Check if cards form a straight flush
- */
-bool GameRules::isStraightFlush(const std::vector<Card>& cards) {
-    return isStraight(cards) && isFlush(cards);
+    return true;
 }
 
 /**
@@ -285,27 +248,11 @@ bool GameRules::tripleBeats(const std::vector<Card>& newTriple, const std::vecto
     return newHigh > lastHigh;
 }
 
-/**
- * Compare two five-card combinations
- */
-bool GameRules::fiveCardBeats(const std::vector<Card>& newCards, const std::vector<Card>& lastCards) {
-    FiveCardType newType = determineFiveCardType(newCards);
-    FiveCardType lastType = determineFiveCardType(lastCards);
+bool GameRules::fourOfAKindBeats(const std::vector<Card>& newFourOfAKind, const std::vector<Card>& lastFourOfAKind) {
+    if (newFourOfAKind.size() != 4 || lastFourOfAKind.size() != 4) return false;
 
-    // Compare by combination rank first
-    int newRank = getFiveCardRank(newType);
-    int lastRank = getFiveCardRank(lastType);
-
-    if (newRank > lastRank) {
-        return true;
-    }
-    else if (newRank < lastRank) {
-        return false;
-    }
-
-    // Same type - compare by highest card
-    Card newHigh = getHighestCard(newCards);
-    Card lastHigh = getHighestCard(lastCards);
+    Card newHigh = getHighestCard(newFourOfAKind);
+    Card lastHigh = getHighestCard(lastFourOfAKind);
 
     return newHigh > lastHigh;
 }
@@ -329,25 +276,72 @@ Card GameRules::getHighestCard(const std::vector<Card>& cards) {
 }
 
 /**
- * Get rank value for five-card combination type
+ * Check if play contains 3 of Spades (for Thirteen)
  */
-int GameRules::getFiveCardRank(FiveCardType type) {
-    switch (type) {
-    case FiveCardType::Straight:      return 1;
-    case FiveCardType::Flush:         return 2;
-    case FiveCardType::FullHouse:     return 3;
-    case FiveCardType::FourOfAKind:   return 4;
-    case FiveCardType::StraightFlush: return 5;
-    default:                          return 0;
-    }
+bool GameRules::containsThreeOfSpades(const std::vector<Card>& cards) {
+    Card threeOfSpades(Rank::Three, Suit::Spades); 
+    return std::find(cards.begin(), cards.end(), threeOfSpades) != cards.end();
 }
 
 /**
- * Check if play contains 3 of Diamonds
+ * Check if cards form a double sequence (3+ pairs in a row)
+ * Example: 3-3-4-4-5-5 (three pairs in sequence)
  */
-bool GameRules::containsThreeOfDiamonds(const std::vector<Card>& cards) {
-    Card threeOfDiamonds(Rank::Three, Suit::Diamonds);
-    return std::find(cards.begin(), cards.end(), threeOfDiamonds) != cards.end();
+bool GameRules::isDoubleSequence(const std::vector<Card>& cards) {
+    if (cards.size() < 6 || cards.size() % 2 != 0) return false;
+
+    auto sorted = sortByRank(cards);
+    size_t numPairs = cards.size() / 2;
+
+    // Check each pair
+    for (size_t i = 0; i < cards.size(); i += 2) {
+        // Check if this is a pair
+        if (sorted[i].getRank() != sorted[i + 1].getRank()) {
+            return false;
+        }
+
+        // Check if pairs are consecutive (except for last pair)
+        if (i + 2 < cards.size()) {
+            int currRank = static_cast<int>(sorted[i].getRank());
+            int nextRank = static_cast<int>(sorted[i + 2].getRank());
+            if (nextRank != currRank + 1) {
+                return false;
+            }
+        }
+    }
+
+    return numPairs >= 3;  // At least 3 pairs
+}
+
+/**
+ * Check if cards form a triple sequence (3+ triples in a row)
+ * Example: 3-3-3-4-4-4-5-5-5 (three triples in sequence)
+ */
+bool GameRules::isTripleSequence(const std::vector<Card>& cards) {
+    if (cards.size() < 9 || cards.size() % 3 != 0) return false;
+
+    auto sorted = sortByRank(cards);
+    size_t numTriples = cards.size() / 3;
+
+    // Check each triple
+    for (size_t i = 0; i < cards.size(); i += 3) {
+        // Check if this is a triple
+        if (sorted[i].getRank() != sorted[i + 1].getRank() ||
+            sorted[i].getRank() != sorted[i + 2].getRank()) {
+            return false;
+        }
+
+        // Check if triples are consecutive (except for last triple)
+        if (i + 3 < cards.size()) {
+            int currRank = static_cast<int>(sorted[i].getRank());
+            int nextRank = static_cast<int>(sorted[i + 3].getRank());
+            if (nextRank != currRank + 1) {
+                return false;
+            }
+        }
+    }
+
+    return numTriples >= 3;  // At least 3 triples
 }
 
 /**
@@ -361,9 +355,9 @@ std::vector<Card> GameRules::sortByRank(std::vector<Card> cards) {
 }
 
 /**
- * Get play type name
+ * Get play type name (Thirteen version)
  */
-std::string GameRules::getPlayTypeName(PlayType type, FiveCardType fiveCardType) {
+std::string GameRules::getPlayTypeName(PlayType type) {
     switch (type) {
     case PlayType::Single:
         return "Single";
@@ -371,15 +365,24 @@ std::string GameRules::getPlayTypeName(PlayType type, FiveCardType fiveCardType)
         return "Pair";
     case PlayType::Triple:
         return "Triple";
-    case PlayType::FiveCard:
-        switch (fiveCardType) {
-        case FiveCardType::Straight:      return "Straight";
-        case FiveCardType::Flush:         return "Flush";
-        case FiveCardType::FullHouse:     return "Full House";
-        case FiveCardType::FourOfAKind:   return "Four of a Kind";
-        case FiveCardType::StraightFlush: return "Straight Flush";
-        default:                          return "Five Card";
-        }
+    case PlayType::FourOfAKind:
+        return "Four of a Kind";  // Powerful standalone play in Thirteen!
+    case PlayType::Sequence:
+        return "Sequence";  // 3+ card straight
+    case PlayType::DoubleSequence:
+        return "Double Sequence";  // Pairs in a row
+    case PlayType::TripleSequence:
+        return "Triple Sequence";  // Triples in a row
+        // Legacy Big Two five-card (kept for reference)
+        // case PlayType::FiveCard:
+        //     switch (fiveCardType) {
+        //         case FiveCardType::Straight:      return "Straight";
+        //         case FiveCardType::Flush:         return "Flush";
+        //         case FiveCardType::FullHouse:     return "Full House";
+        //         case FiveCardType::FourOfAKind:   return "Four of a Kind";
+        //         case FiveCardType::StraightFlush: return "Straight Flush";
+        //         default:                          return "Five Card";
+        //     }
     default:
         return "Invalid";
     }

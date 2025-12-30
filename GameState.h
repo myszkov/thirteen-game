@@ -182,4 +182,4 @@ private:
     bool firstPlayOfGame_;  // Track if the very first play has been made
 };
 
-#endif // GAMESTATE_HPP
+#endif // GAMESTATE_H

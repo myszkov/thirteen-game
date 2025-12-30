@@ -93,10 +93,9 @@ public:
     void clear();
 
     /**
-     * Check if this hand contains the 3 of Diamonds
-     * (Used to determine starting player in Big Two)
-     */
-    bool hasThreeOfDiamonds() const;
+     * Check if this hand contains the 3 of Spades
+     * (Used to determine starting player in Thirteen) */
+    bool hasThreeOfSpades() const;
 
     /**
      * String representation of the hand

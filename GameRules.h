@@ -12,26 +12,17 @@
 #include <string>
 
  /**
-  * Play type enumeration
+  * Play type enumeration (Thirteen version)
   */
 enum class PlayType {
     Invalid,
-    Single,         // One card
-    Pair,           // Two cards of same rank
-    Triple,         // Three cards of same rank
-    FiveCard        // Five-card combinations (straight, flush, full house, etc.)
-};
-
-/**
- * Five-card combination types
- */
-enum class FiveCardType {
-    None,
-    Straight,       // 5 consecutive ranks
-    Flush,          // 5 cards of same suit
-    FullHouse,      // Triple + Pair
-    FourOfAKind,    // Four cards of same rank + 1
-    StraightFlush   // Straight + Flush
+    Single,            // One card
+    Pair,              // Two cards of same rank
+    Triple,            // Three cards of same rank
+    FourOfAKind,       // Four cards of same rank (powerful in Thirteen!)
+    Sequence,          // 3+ consecutive cards (straights)
+    DoubleSequence,    // 3+ pairs in sequence
+    TripleSequence     // 3+ triples in sequence
 };
 
 /**
@@ -40,13 +31,11 @@ enum class FiveCardType {
 struct PlayValidation {
     bool isValid;
     PlayType playType;
-    FiveCardType fiveCardType;
     std::string errorMessage;
 
     PlayValidation()
         : isValid(false),
         playType(PlayType::Invalid),
-        fiveCardType(FiveCardType::None),
         errorMessage("") {
     }
 };
@@ -63,7 +52,7 @@ public:
         const std::vector<Card>& cards,
         const std::vector<Card>& lastPlay,
         bool isFirstPlay,
-        bool mustIncludeThreeOfDiamonds
+        bool mustIncludeThreeOfSpades
     );
 
     /**
@@ -78,11 +67,6 @@ public:
      * Determine play type
      */
     static PlayType determinePlayType(const std::vector<Card>& cards);
-
-    /**
-     * Determine five-card combination type
-     */
-    static FiveCardType determineFiveCardType(const std::vector<Card>& cards);
 
     /**
      * Check if cards form a valid single
@@ -100,29 +84,29 @@ public:
     static bool isTriple(const std::vector<Card>& cards);
 
     /**
-     * Check if cards form a valid straight
-     */
-    static bool isStraight(const std::vector<Card>& cards);
-
-    /**
-     * Check if cards form a valid flush
-     */
-    static bool isFlush(const std::vector<Card>& cards);
-
-    /**
-     * Check if cards form a valid full house
-     */
-    static bool isFullHouse(const std::vector<Card>& cards);
-
-    /**
      * Check if cards form four of a kind
      */
     static bool isFourOfAKind(const std::vector<Card>& cards);
 
     /**
-     * Check if cards form a straight flush
+     * Check if cards form a valid straight (Thirteen: 3+ cards)
      */
-    static bool isStraightFlush(const std::vector<Card>& cards);
+    static bool isStraight(const std::vector<Card>& cards);
+
+    /**
+     * Check if cards form a valid sequence (3+ consecutive cards)
+     */
+    static bool isSequence(const std::vector<Card>& cards);
+
+    /**
+     * Check if cards form a valid double sequence (3+ pairs in a row)
+     */
+    static bool isDoubleSequence(const std::vector<Card>& cards);
+
+    /**
+     * Check if cards form a valid triple sequence (3+ triples in a row)
+     */
+    static bool isTripleSequence(const std::vector<Card>& cards);
 
     /**
      * Compare two singles
@@ -140,9 +124,9 @@ public:
     static bool tripleBeats(const std::vector<Card>& newTriple, const std::vector<Card>& lastTriple);
 
     /**
-     * Compare two five-card combinations
+     * Compare two four Of a Kind
      */
-    static bool fiveCardBeats(const std::vector<Card>& newCards, const std::vector<Card>& lastCards);
+    static bool fourOfAKindBeats(const std::vector<Card>& newTriple, const std::vector<Card>& lastFourOfAKind);
 
     /**
      * Get the highest card in a set
@@ -150,14 +134,9 @@ public:
     static Card getHighestCard(const std::vector<Card>& cards);
 
     /**
-     * Get rank value for comparison (in a five-card combo)
-     */
-    static int getFiveCardRank(FiveCardType type);
-
-    /**
      * Check if play must include 3 of Diamonds (first play of game)
      */
-    static bool containsThreeOfDiamonds(const std::vector<Card>& cards);
+    static bool containsThreeOfSpades(const std::vector<Card>& cards);
 
     /**
      * Sort cards by rank
@@ -167,7 +146,7 @@ public:
     /**
      * Get play type name
      */
-    static std::string getPlayTypeName(PlayType type, FiveCardType fiveCardType = FiveCardType::None);
+    static std::string getPlayTypeName(PlayType type);
 };
 
-#endif // GAMERULES_HPP
+#endif // GAMERULES_H

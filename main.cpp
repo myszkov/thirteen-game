@@ -37,9 +37,9 @@ public:
         // Initialize test game state
         initializeTestGame();
 
-        std::cout << "=== Thirteen (Big Two) ===" << std::endl;
+        std::cout << "=== Thirteen ===" << std::endl;
         std::cout << "Commands: play <cards>, pass, sort, quit" << std::endl;
-        std::cout << "Example: play 3H 3D (play pair of threes)" << std::endl;
+        std::cout << "Example: play 3S 3D (play pair of threes)" << std::endl;
         std::cout << "> " << std::flush;
     }
 
@@ -307,7 +307,7 @@ private:
                 gameState.setFirstPlayMade();
             }
 
-            std::string playName = GameRules::getPlayTypeName(validation.playType, validation.fiveCardType);
+            std::string playName = GameRules::getPlayTypeName(validation.playType);
             gameStatus = currentPlayer->getName() + " played " + playName + ": " + cardsStr;
             std::cout << gameStatus << std::endl;
 

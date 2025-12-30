@@ -127,9 +127,9 @@ void Hand::clear() {
 /**
  * Check if this hand contains the 3 of Diamonds
  */
-bool Hand::hasThreeOfDiamonds() const {
-    Card threeOfDiamonds(Rank::Three, Suit::Diamonds);
-    return hasCard(threeOfDiamonds);
+bool Hand::hasThreeOfSpades() const {
+    Card threeOfSpades(Rank::Three, Suit::Spades);
+    return hasCard(threeOfSpades);
 }
 
 /**

@@ -56,7 +56,7 @@ void GameState::startNewGame() {
     // Deal cards
     dealCards();
 
-    // Find starting player (player with 3 of Diamonds)
+    // Find starting player (player with 3 of Spades)
     currentPlayerIndex_ = findStartingPlayer();
 
     // Reset game state
@@ -201,16 +201,18 @@ Player* GameState::findWinner() {
 }
 
 /**
- * Find starting player (player with 3 of Diamonds)
+ * Find starting player (player with 3 of Spades in Thirteen)
  */
 size_t GameState::findStartingPlayer() const {
+    Card threeOfSpades(Rank::Three, Suit::Spades);
+
     for (size_t i = 0; i < players_.size(); ++i) {
-        if (players_[i].getHand().hasThreeOfDiamonds()) {
+        if (players_[i].getHand().hasCard(threeOfSpades)) {
             return i;
         }
     }
 
-    // Fallback to first player if 3 of Diamonds not found
+    // Fallback to first player if 3 of Spades not found
     return 0;
 }
 
