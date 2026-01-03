@@ -1,5 +1,5 @@
 ﻿/**
- * Thirteen (Big Two) Card Game
+ * Thirteen (Tiến Lên) Card Game
  * Main entry point - manages game loop with CLI input and SFML rendering
  */
 
@@ -37,9 +37,9 @@ public:
         // Initialize test game state
         initializeTestGame();
 
-        std::cout << "=== Thirteen ===" << std::endl;
+        std::cout << "=== Thirteen (Tiến Lên) ===" << std::endl;
         std::cout << "Commands: play <cards>, pass, sort, quit" << std::endl;
-        std::cout << "Example: play 3S 3D (play pair of threes)" << std::endl;
+        std::cout << "Example: play 3S (start with 3♠), play 3H 4D 5S (sequence)" << std::endl;
         std::cout << "> " << std::flush;
     }
 
@@ -81,13 +81,14 @@ private:
     // Game state
     GameState gameState;
     std::string gameStatus = "Welcome! Starting a new game...";
+    bool showingTransition = false;  // Flag for player transition screen
 
     /**
-     * Initialize game with proper game state
+     * Initialize game with 4 human players (Pass & Play mode)
      */
     void initializeTestGame() {
-        // Initialize with 4 players (1 human, 3 AI)
-        gameState.initializePlayers(4, 1);
+        // Initialize with 4 players (all human for Pass & Play!)
+        gameState.initializePlayers(4, 4);  // 4 players, 4 humans
 
         // Start the game
         gameState.startNewGame();
@@ -95,7 +96,7 @@ private:
         gameStatus = "Game started! " + gameState.getStatusMessage();
 
         // Print game info to console
-        std::cout << "\n=== Game Started ===" << std::endl;
+        std::cout << "\n=== Game Started (Pass & Play Mode) ===" << std::endl;
         std::cout << "Players:" << std::endl;
         for (size_t i = 0; i < gameState.getNumPlayers(); ++i) {
             const Player* player = gameState.getPlayer(i);
@@ -105,6 +106,10 @@ private:
         }
         std::cout << "\n" << gameStatus << std::endl;
         std::cout << "=====================\n" << std::endl;
+
+        // Show transition for first player
+        showingTransition = true;
+        needsRedraw = true;
     }
 
     /**
@@ -153,6 +158,11 @@ private:
                     window.close();
                     running = false;
                 }
+
+                // SPACE key to continue from transition screen
+                if (keyPressed->code == sf::Keyboard::Key::Space && showingTransition) {
+                    handleTransitionContinue();
+                }
             }
         }
     }
@@ -187,10 +197,10 @@ private:
         }
         else if (command == "pass") {
             Player* currentPlayer = gameState.getCurrentPlayer();
-            if (currentPlayer && currentPlayer->getType() == PlayerType::Human) {
+            if (currentPlayer) {
                 currentPlayer->setHasPassed(true);
                 gameState.incrementPasses();
-                gameStatus = "You passed.";
+                gameStatus = currentPlayer->getName() + " passed.";
                 std::cout << gameStatus << std::endl;
 
                 // Move to next turn
@@ -205,12 +215,11 @@ private:
                     gameState.clearLastPlay();
                 }
 
-                playAITurns();
+                // Show transition screen for next player
+                showingTransition = true;
 
                 gameStatus = gameState.getStatusMessage();
-            }
-            else {
-                std::cout << "It's not your turn!" << std::endl;
+                std::cout << "\n=== Press SPACE to continue to next player ===" << std::endl;
             }
         }
         else if (command.starts_with("play ")) {
@@ -218,7 +227,7 @@ private:
             handlePlayCommand(cardsStr);
         }
         else if (command == "sort" || command == "sort rank") {
-            Player* currentPlayer = gameState.getPlayer(0);  // Human is always player 0
+            Player* currentPlayer = gameState.getCurrentPlayer();
             if (currentPlayer) {
                 currentPlayer->getHand().sort(SortOrder::ByRank);
                 gameStatus = "Hand sorted by rank.";
@@ -226,7 +235,7 @@ private:
             }
         }
         else if (command == "sort suit") {
-            Player* currentPlayer = gameState.getPlayer(0);  // Human is always player 0
+            Player* currentPlayer = gameState.getCurrentPlayer();
             if (currentPlayer) {
                 currentPlayer->getHand().sort(SortOrder::BySuit);
                 gameStatus = "Hand sorted by suit.";
@@ -251,12 +260,8 @@ private:
             return;
         }
 
-        // Only allow human player to play
-        if (currentPlayer->getType() != PlayerType::Human) {
-            std::cout << "It's not your turn! Current player: " << currentPlayer->getName() << std::endl;
-            gameStatus = "Not your turn!";
-            return;
-        }
+        // Check if it's the correct player's turn (all players are human in Pass & Play)
+        // No need to check player type - just verify cards are in current player's hand
 
         // Split card strings by spaces
         std::vector<std::string> cardStrs;
@@ -322,11 +327,12 @@ private:
             // Move to next turn
             gameState.nextTurn();
 
-            // Auto-play AI turns
-            playAITurns();
+            // Show transition screen for next player
+            showingTransition = true;
 
             gameStatus = gameState.getStatusMessage();
             std::cout << "Cards remaining: " << currentPlayer->getHand().size() << std::endl;
+            std::cout << "\n=== Press SPACE to continue to next player ===" << std::endl;
         }
         else {
             std::cout << "Error removing cards from hand." << std::endl;
@@ -335,34 +341,17 @@ private:
     }
 
     /**
-     * Handle AI turns automatically
+     * Handle SPACE key press to show next player's cards
      */
-    void playAITurns() {
-        while (gameState.getPhase() == GamePhase::InProgress) {
-            Player* currentPlayer = gameState.getCurrentPlayer();
-            if (!currentPlayer || currentPlayer->getType() == PlayerType::Human) {
-                break;  // Stop when it's human's turn
-            }
+    void handleTransitionContinue() {
+        showingTransition = false;
+        needsRedraw = true;
 
-            // Simple AI: just pass for now
-            std::cout << currentPlayer->getName() << " passes." << std::endl;
-            currentPlayer->setHasPassed(true);
-            gameState.incrementPasses();
-
-            // Move to next turn BEFORE checking round win
-            gameState.nextTurn();
-
-            // Check if all others have passed (check AFTER moving to next player)
-            if (gameState.allOthersHavePassed()) {
-                const Player* roundWinner = gameState.getLastPlayingPlayer();
-                if (roundWinner) {
-                    std::cout << "All others passed. " << roundWinner->getName() << " wins the round!" << std::endl;
-                }
-                gameState.clearLastPlay();
-            }
-
-            // Small delay for readability
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        Player* currentPlayer = gameState.getCurrentPlayer();
+        if (currentPlayer) {
+            std::cout << "\n=== " << currentPlayer->getName() << "'s Turn ===" << std::endl;
+            std::cout << "Type 'help' for commands" << std::endl;
+            std::cout << "> " << std::flush;
         }
     }
 
@@ -372,6 +361,45 @@ private:
     void render() {
         renderer.clear();
 
+        // If showing transition screen, hide cards
+        if (showingTransition) {
+            drawTransitionScreen();
+        }
+        else {
+            drawGameScreen();
+        }
+
+        renderer.present();
+    }
+
+    /**
+     * Draw transition screen (hides cards between players)
+     */
+    void drawTransitionScreen() {
+        Player* nextPlayer = gameState.getCurrentPlayer();
+        if (!nextPlayer) return;
+
+        // Draw large centered message
+        std::string message = nextPlayer->getName() + "'s Turn";
+        renderer.drawText(message, renderer.getCenterX(), renderer.getCenterY() - 100,
+            48, sf::Color::White, TextAlign::Center);
+
+        // Draw instruction
+        renderer.drawText("Press SPACE to show your cards",
+            renderer.getCenterX(), renderer.getCenterY() + 50,
+            24, sf::Color(200, 200, 200), TextAlign::Center);
+
+        // Draw card count
+        std::string cardInfo = "Cards in hand: " + std::to_string(nextPlayer->getHand().size());
+        renderer.drawText(cardInfo,
+            renderer.getCenterX(), renderer.getCenterY(),
+            20, sf::Color::White, TextAlign::Center);
+    }
+
+    /**
+     * Draw main game screen with cards
+     */
+    void drawGameScreen() {
         // Draw status panel at top
         float statusX = 50;
         float statusY = 20;
@@ -394,22 +422,21 @@ private:
         // Draw center play area (last played cards)
         renderer.drawPlayArea(gameState.getLastPlay(), renderer.getCenterX(), renderer.getCenterY());
 
-        // Draw human player's hand at bottom (player 0 is always human)
-        const Player* humanPlayer = gameState.getPlayer(0);
-        if (humanPlayer) {
+        // Draw CURRENT player's hand at bottom
+        const Player* currentPlayer = gameState.getCurrentPlayer();
+        if (currentPlayer) {
             float handY = renderer.getWindowHeight() - CardSprite::CARD_HEIGHT - 20;
-            renderer.drawHand(humanPlayer->getHand(), 50, handY, true);
+            renderer.drawHand(currentPlayer->getHand(), 50, handY, true);
 
-            // Draw label
-            renderer.drawText("Your Hand:", 50, handY - 25, 18, sf::Color::White);
+            // Draw label showing whose hand this is
+            std::string handLabel = currentPlayer->getName() + "'s Hand:";
+            renderer.drawText(handLabel, 50, handY - 25, 18, sf::Color::Yellow);
         }
 
         // Draw helpful text at bottom
         renderer.drawText("Type commands in the terminal",
             renderer.getCenterX(), renderer.getBottomY() - 10,
             16, sf::Color(200, 200, 200), TextAlign::Center);
-
-        renderer.present();
     }
 
     /**

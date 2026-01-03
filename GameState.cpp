@@ -56,7 +56,7 @@ void GameState::startNewGame() {
     // Deal cards
     dealCards();
 
-    // Find starting player (player with 3 of Spades)
+    // Find starting player (player with 3 of Diamonds)
     currentPlayerIndex_ = findStartingPlayer();
 
     // Reset game state
@@ -204,7 +204,7 @@ Player* GameState::findWinner() {
  * Find starting player (player with 3 of Spades in Thirteen)
  */
 size_t GameState::findStartingPlayer() const {
-    Card threeOfSpades(Rank::Three, Suit::Spades);
+    Card threeOfSpades(Rank::Three, Suit::Spades);  // Changed from Diamonds to Spades for Thirteen
 
     for (size_t i = 0; i < players_.size(); ++i) {
         if (players_[i].getHand().hasCard(threeOfSpades)) {
@@ -221,9 +221,7 @@ size_t GameState::findStartingPlayer() const {
  */
 std::string GameState::generatePlayerName(size_t index, PlayerType type) const {
     if (type == PlayerType::Human) {
-        if (index == 0) {
-            return "You";
-        }
+        // For Pass & Play, use Player 1, Player 2, etc.
         return "Player " + std::to_string(index + 1);
     }
     else {
