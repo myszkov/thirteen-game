@@ -6,7 +6,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "Hand.h"
+#include "Core/Hand.h"
 #include <string>
 #include <memory>
 

@@ -6,7 +6,7 @@
 #ifndef CARDSPRITE_H
 #define CARDSPRITE_H
 
-#include "Card.h"
+#include "Core/Card.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 

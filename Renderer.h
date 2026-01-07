@@ -9,7 +9,7 @@
 
 #include "Core/Card.h"
 #include "Core/Hand.h"
-#include "Rendering/Cardsprite.h"
+#include "Rendering/CardSprite.h"
 #include "Rendering/UIElements.h"
 #include <SFML/Graphics.hpp>
 #include <vector>

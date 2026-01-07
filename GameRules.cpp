@@ -3,7 +3,7 @@
  * Implementation of Big Two game rules
  */
 
-#include "Game/GameRules.h"
+#include "Game/GameGameRules.h"
 #include <algorithm>
 #include <set>
 

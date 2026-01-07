@@ -13,40 +13,70 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# Viktor's SFML installation path
+# SFML Configuration - Set your SFML path here
 if(WIN32)
+    # Update this path to match YOUR SFML installation
     set(SFML_DIR "C:/Users/Viktor/source/SFML/lib/cmake/SFML")
 endif()
 
-# Find SFML 3 (SFML 3 uses capitalized component names)
+# Find SFML 3 (note: component names are capitalized in SFML 3)
 find_package(SFML 3 COMPONENTS Graphics Window System REQUIRED)
 
-# All source files in the root directory
-set(ALL_SOURCES
-    main.cpp
-    Card.cpp
-    Deck.cpp
-    Hand.cpp
-    Player.cpp
-    GameState.cpp
-    GameRules.cpp
-    Renderer.cpp
-    CardSprite.cpp
-    UIElements.cpp
+# Include directories - point to the include/ folder
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+# ============================================
+# Collect Source Files by Layer
+# ============================================
+
+# Core Layer - Card game fundamentals
+set(CORE_SOURCES
+    src/Core/Card.cpp
+    src/Core/Deck.cpp
+    src/Core/Hand.cpp
 )
 
-# Create executable
+# Game Logic Layer - Rules and state management
+set(GAME_SOURCES
+    src/Game/Player.cpp
+    src/Game/GameState.cpp
+    src/Game/GameRules.cpp
+)
+
+# Rendering Layer - Graphics and UI
+set(RENDERING_SOURCES
+    src/Rendering/Renderer.cpp
+    src/Rendering/CardSprite.cpp
+    src/Rendering/UIElements.cpp
+)
+
+# Combine all sources
+set(ALL_SOURCES
+    ${CORE_SOURCES}
+    ${GAME_SOURCES}
+    ${RENDERING_SOURCES}
+    main.cpp
+)
+
+# ============================================
+# Create Executable
+# ============================================
+
 add_executable(thirteen-game ${ALL_SOURCES})
 
-# Link SFML libraries
+# Link SFML libraries (SFML 3 uses SFML:: namespace)
 target_link_libraries(thirteen-game PRIVATE 
     SFML::Graphics
     SFML::Window
     SFML::System
 )
 
-# Windows-specific: Copy SFML DLLs to output directory
+# ============================================
+# Windows-Specific Configuration
+# ============================================
+
 if(WIN32)
+    # Automatically copy SFML DLLs to output directory
     add_custom_command(TARGET thirteen-game POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:SFML::Graphics>
@@ -56,19 +86,37 @@ if(WIN32)
         COMMENT "Copying SFML DLLs to output directory"
     )
     
+    # Set working directory for Visual Studio debugger
     set_target_properties(thirteen-game PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
 endif()
 
-# Print build configuration
-message(STATUS "=== Thirteen Build Configuration ===")
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+# ============================================
+# Build Information
+# ============================================
+
+message(STATUS "")
+message(STATUS "=== Thirteen Card Game - Build Configuration ===")
+message(STATUS "Project: ${PROJECT_NAME}")
+message(STATUS "Version: ${PROJECT_VERSION}")
+message(STATUS "C++ Standard: C++${CMAKE_CXX_STANDARD}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "")
 if(SFML_FOUND)
     message(STATUS "SFML Found: YES")
     message(STATUS "SFML Version: ${SFML_VERSION}")
+    message(STATUS "SFML Directory: ${SFML_DIR}")
 else()
     message(STATUS "SFML Found: NO")
+    message(WARNING "SFML not found! Set SFML_DIR or SFML_ROOT.")
 endif()
-message(STATUS "====================================")
+message(STATUS "")
+message(STATUS "Source Files:")
+message(STATUS "  Core: ${CORE_SOURCES}")
+message(STATUS "  Game: ${GAME_SOURCES}")
+message(STATUS "  Rendering: ${RENDERING_SOURCES}")
+message(STATUS "")
+message(STATUS "===============================================")
+message(STATUS "")

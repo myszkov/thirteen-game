@@ -12,12 +12,12 @@
 #include <mutex>
 
  // Include our game components
-#include "Card.h"
-#include "Deck.h"
-#include "Hand.h"
-#include "GameState.h"
-#include "GameRules.h"
-#include "Renderer.h"
+#include "Core/Card.h"
+#include "Core/Deck.h"
+#include "Core/Hand.h"
+#include "Game/GameState.h"
+#include "Game/GameRules.h"
+#include "Rendering/Renderer.h"
 
 class Game {
 public:
