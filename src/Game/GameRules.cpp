@@ -170,15 +170,29 @@ bool GameRules::isSingle(const std::vector<Card>& cards) {
 }
 
 /**
- * Check if cards form a valid straight
+ * Check if cards form a valid straight (Thirteen: 3+ consecutive cards)
  */
 bool GameRules::isStraight(const std::vector<Card>& cards) {
-    if (cards.size() < 3) return false;
-    // ... checks for 3+ consecutive cards
+    if (cards.size() < 3) return false;  // Minimum 3 cards
+
+    auto sorted = sortByRank(cards);
+
+    // Check consecutive ranks
+    for (size_t i = 1; i < sorted.size(); ++i) {
+        int prevRank = static_cast<int>(sorted[i - 1].getRank());
+        int currRank = static_cast<int>(sorted[i].getRank());
+
+        // Each card must be exactly 1 rank higher than previous
+        if (currRank != prevRank + 1) {
+            return false;  // Not consecutive!
+        }
+    }
+
+    return true;
 }
 
 /**
- * Check if cards form a valid sequence
+ * Check if cards form a sequence (alias for isStraight in Thirteen)
  */
 bool GameRules::isSequence(const std::vector<Card>& cards) {
     return isStraight(cards);
