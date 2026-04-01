@@ -44,7 +44,7 @@ public:
     /**
      * Draw a single card
      */
-    void drawCard(const Card& card, float x, float y, bool highlighted = false, bool faceUp = true);
+    void drawCard(const Card& card, float x, float y, bool highlighted = false, bool faceUp = true, float scale = 1.0f);
 
     /**
      * Draw a hand of cards (horizontally arranged)
@@ -87,26 +87,33 @@ public:
         bool hovered = false);
 
     /**
-     * Get window dimensions
+     * Fixed logical game resolution — all layout is done in these coordinates.
+     * The window may be any size; a view centres this area on screen.
      */
-    float getWindowWidth() const;
-    float getWindowHeight() const;
+    static constexpr float GAME_WIDTH  = 1280.0f;
+    static constexpr float GAME_HEIGHT = 720.0f;
+
+    /**
+     * Always returns the logical game size, not the actual window pixel size.
+     */
+    float getWindowWidth()  const { return GAME_WIDTH; }
+    float getWindowHeight() const { return GAME_HEIGHT; }
 
     /**
      * Layout helpers - calculate common positions
      */
-    float getCenterX() const { return getWindowWidth() / 2.0f; }
-    float getCenterY() const { return getWindowHeight() / 2.0f; }
-    float getBottomY() const { return getWindowHeight() - 20.0f; }
-    float getTopY() const { return 20.0f; }
+    float getCenterX() const { return GAME_WIDTH  / 2.0f; }
+    float getCenterY() const { return GAME_HEIGHT / 2.0f; }
+    float getBottomY() const { return GAME_HEIGHT - 20.0f; }
+    float getTopY()    const { return 20.0f; }
+
+    /**
+     * Calculate card spacing for a hand (public for hit-testing in Game)
+     */
+    float calculateCardSpacing(size_t numCards, float maxWidth) const;
 
 private:
     sf::RenderWindow& window_;
-
-    /**
-     * Calculate card spacing for a hand
-     */
-    float calculateCardSpacing(size_t numCards, float maxWidth) const;
 
     /**
      * Draw card back texture

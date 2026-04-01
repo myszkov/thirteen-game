@@ -37,10 +37,11 @@ void Renderer::present() {
 /**
  * Draw a single card
  */
-void Renderer::drawCard(const Card& card, float x, float y, bool highlighted, bool faceUp) {
+void Renderer::drawCard(const Card& card, float x, float y, bool highlighted, bool faceUp, float scale) {
     CardSprite sprite(card, x, y);
     sprite.setHighlighted(highlighted);
     sprite.setFaceUp(faceUp);
+    sprite.setScale(scale);
     sprite.draw(window_);
 }
 
@@ -59,7 +60,8 @@ void Renderer::drawHand(const Hand& hand, float x, float y, bool faceUp,
     for (size_t i = 0; i < cards.size(); ++i) {
         bool isHighlighted = i < highlighted.size() ? highlighted[i] : false;
         float cardX = x + i * spacing;
-        drawCard(cards[i], cardX, y, isHighlighted, faceUp);
+        float cardY = isHighlighted ? y - 20.0f : y;
+        drawCard(cards[i], cardX, cardY, isHighlighted, faceUp);
     }
 }
 
@@ -181,16 +183,6 @@ void Renderer::drawButton(const std::string& label, float x, float y,
     button.draw(window_);
 }
 
-/**
- * Get window dimensions
- */
-float Renderer::getWindowWidth() const {
-    return static_cast<float>(window_.getSize().x);
-}
-
-float Renderer::getWindowHeight() const {
-    return static_cast<float>(window_.getSize().y);
-}
 
 /**
  * Calculate card spacing for a hand
