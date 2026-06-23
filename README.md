@@ -4,16 +4,16 @@ Welcome to my repository for a fully-featured version of the card game 'thirteen
 
 The program features a complete rule engine, pass and play multiplayer for four human players, and a clear seperation of game logic from presentation.
 
-![image alt](https://github.com/myszkov/thirteen-game/blob/6d7f5dea9ad292c39a72591c565adda4e2895745/thirteen-game-player-1-turn-new.JPG)
+![image alt](https://github.com/v-vik/thirteen-game/blob/6d7f5dea9ad292c39a72591c565adda4e2895745/thirteen-game-player-1-turn-new.JPG)
 Main game interface showing cards, player information and play area
 
-![image alt](https://github.com/myszkov/thirteen-game/blob/484402402638e3e2e7abd0eee8908d636ae67cb1/thirteen-player-3-turn.JPG)
+![image alt](https://github.com/v-vik/thirteen-game/blob/484402402638e3e2e7abd0eee8908d636ae67cb1/thirteen-player-3-turn.JPG)
 Intermittent game screen between two player turns allowing to hide cards from each player
 
-![image alt](https://github.com/myszkov/thirteen-game/blob/73d52bdc325a81c3fa16892372fb33c7e1f50f77/thirteen-player-1.JPG)
+![image alt](https://github.com/v-vik/thirteen-game/blob/73d52bdc325a81c3fa16892372fb33c7e1f50f77/thirteen-player-1.JPG)
 Example of a sequence play with multiple cards
 
-![image alt](https://github.com/myszkov/thirteen-game/blob/73d52bdc325a81c3fa16892372fb33c7e1f50f77/thirteen-player-4-turn-console.JPG)
+![image alt](https://github.com/v-vik/thirteen-game/blob/73d52bdc325a81c3fa16892372fb33c7e1f50f77/thirteen-player-4-turn-console.JPG)
 Terminal command system for gameplay
 
 ## 🎮 Features
@@ -189,7 +189,7 @@ Modern C++ Community - For C++20 best practices and patterns
 
 ## 📧 Contact
 Viktor Myszko
-Project Link: https://github.com/myszkov/thirteen-game
+Project Link: https://github.com/v-vik/thirteen-game
 
 ## 📊 Project Stats
 
